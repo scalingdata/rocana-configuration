@@ -23,6 +23,8 @@ import org.junit.Test;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.util.List;
+import java.util.Map;
 
 public class TestConfigurationParser {
 
@@ -61,6 +63,11 @@ public class TestConfigurationParser {
       );
 
       Assert.assertNotNull(object);
+
+      List<String> names = object.getNames();
+
+      Assert.assertNotNull(names);
+      Assert.assertEquals(4, names.size());
     }
   }
 
@@ -77,6 +84,11 @@ public class TestConfigurationParser {
       );
 
       Assert.assertNotNull(object);
+
+      List<FlatObject> flatObjects = object.getFlatObjects();
+
+      Assert.assertNotNull(flatObjects);
+      Assert.assertEquals(2, flatObjects.size());
     }
   }
 
@@ -109,6 +121,24 @@ public class TestConfigurationParser {
       );
 
       Assert.assertNotNull(object);
+
+      Map<String, FlatObject> flatObjectMap = object.getFlatObjectMap();
+
+      Assert.assertNotNull(flatObjectMap);
+      Assert.assertEquals(2, flatObjectMap.size());
+      Assert.assertEquals(true, flatObjectMap.containsKey("one"));
+      Assert.assertEquals(true, flatObjectMap.containsKey("two"));
+
+      FlatObject one = flatObjectMap.get("one");
+      FlatObject two = flatObjectMap.get("two");
+
+      Assert.assertNotNull(one);
+      Assert.assertEquals(1, one.getIntegerValue().intValue());
+      Assert.assertEquals("Hello world", one.getStringValue());
+
+      Assert.assertNotNull(two);
+      Assert.assertEquals(2, two.getIntegerValue().intValue());
+      Assert.assertEquals("Goodbye world", two.getStringValue());
     }
   }
 

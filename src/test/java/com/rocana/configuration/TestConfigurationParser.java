@@ -39,6 +39,12 @@ public class TestConfigurationParser {
       );
 
       Assert.assertNotNull(object);
+      Assert.assertEquals("1 minute", object.getDurationValue());
+      Assert.assertEquals("1 GB", object.getSizeValue());
+      Assert.assertEquals("Hello world", object.getStringValue());
+      Assert.assertEquals(1.0d, object.getFloatValue().doubleValue(), 0.0d);
+      Assert.assertEquals(1, object.getIntegerValue().intValue());
+      Assert.assertEquals(1L, object.getLongValue().longValue());
     }
   }
 

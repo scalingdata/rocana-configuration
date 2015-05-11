@@ -50,6 +50,13 @@ public class ConfigurationParser {
 
     logger.debug("Parsed configuration:{}", parseTree.toStringTree(parser));
 
+    /*
+     * Use either new ParserTreeWalker(listener, parseTree) or
+     * new ConfigurationHandler().visit(parseTree)
+     * where listener is an impl of ConfigurationBaseListener or
+     * ConfigurationHandler is an impl of ConfigurationBaseVisitor.
+     */
+
     return null;
   }
 

@@ -65,15 +65,11 @@ public class ConfigurationParser {
 
     logger.debug("Parsed configuration:{}", parseTree.toStringTree(parser));
 
-    /*
-     * Use either new ParserTreeWalker(listener, parseTree) or
-     * new ConfigurationHandler().visit(parseTree)
-     * where listener is an impl of ConfigurationBaseListener or
-     * ConfigurationHandler is an impl of ConfigurationBaseVisitor.
-     */
     Visitor<T> visitor = new Visitor<>(typeDescriptor);
 
     visitor.visit(parseTree);
+
+    logger.debug("Configured object:{}", visitor.getResult());
 
     return visitor.getResult();
   }
@@ -87,6 +83,7 @@ public class ConfigurationParser {
 
     private Deque<TypeDescriptor> typeStack;
     private Deque<Object> valueStack;
+    private T configuration;
 
     public Visitor(TypeDescriptor typeDescriptor) {
       this.typeStack = Queues.newArrayDeque();
@@ -268,13 +265,13 @@ public class ConfigurationParser {
 
       logger.debug("Result:{}", value);
 
-      valueStack.push(value.get(0));
+      configuration = (T) value.get(0);
 
       return null;
     }
 
     public T getResult() {
-      return (T) valueStack.pop();
+      return configuration;
     }
 
   }

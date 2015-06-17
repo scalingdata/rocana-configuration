@@ -129,4 +129,13 @@
     </snapshotRepository>
   </distributionManagement>
 
+  <scm>
+    <connection>scm:git:git@github.com:scalingdata/rocana-configuration.git</connection>
+    <url>https://github.com/scalingdata/rocana-configuration</url>
+    <developerConnection>
+      scm:git:git@github.com:scalingdata/rocana-configuration.git
+    </developerConnection>
+    <tag>master</tag>
+  </scm>
+
 </project>

@@ -18,7 +18,8 @@ fi
 ${MVN} ${MVN_FLAGS} \
   versions:set \
     -DnewVersion=${ROCANA_CONFIGURATION_RELEASE_VERSION} \
-    -DgenerateBackupPoms=false
+    -DgenerateBackupPoms=false \
+  || exit 1
 
 # Commit and push the version number update
 ${MVN} ${MVN_FLAGS} \
@@ -26,19 +27,22 @@ ${MVN} ${MVN_FLAGS} \
     -Dincludes=**/pom.xml \
     -Dexcludes=**/target/**/pom.xml \
   scm:checkin \
-    -Dmessage="ROCANA-BUILD: Preparing for release ${ROCANA_CONFIGURATION_RELEASE_VERSION}"
+    -Dmessage="ROCANA-BUILD: Preparing for release ${ROCANA_CONFIGURATION_RELEASE_VERSION}" \
+  || exit 1
 
 # Deploy the release to the maven repo and tag the release in git
 ${MVN} ${MVN_FLAGS} \
   deploy \
   scm:tag \
-    -Dtag=release-${ROCANA_CONFIGURATION_RELEASE_VERSION}
+    -Dtag=release-${ROCANA_CONFIGURATION_RELEASE_VERSION} \
+  || exit 1
 
 # Set the version to the next development version
 ${MVN} ${MVN_FLAGS} \
   versions:set \
     -DnewVersion=${ROCANA_CONFIGURATION_DEVELOPMENT_VERSION} \
-    -DgenerateBackupPoms=false
+    -DgenerateBackupPoms=false \
+  || exit 1
 
 # Commit and push the version number update
 ${MVN} ${MVN_FLAGS} \
@@ -46,4 +50,5 @@ ${MVN} ${MVN_FLAGS} \
     -Dincludes=**/pom.xml \
     -Dexcludes=**/target/**/pom.xml \
   scm:checkin \
-    -Dmessage="ROCANA-BUILD: Preparing for ${ROCANA_CONFIGURATION_DEVELOPMENT_VERSION} development"
+    -Dmessage="ROCANA-BUILD: Preparing for ${ROCANA_CONFIGURATION_DEVELOPMENT_VERSION} development" \
+  || exit 1

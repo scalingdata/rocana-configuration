@@ -43,6 +43,10 @@ class ListTypeDescriptor implements TypeDescriptor {
 
   @Override
   public List<TypeDescriptor> getChildren() {
+    if (child == null) {
+      // used to load the type descriptor for recursive types
+      child = TypeMapping.descriptorRegistry.get(targetType);
+    }
     return Collections.singletonList(child);
   }
 

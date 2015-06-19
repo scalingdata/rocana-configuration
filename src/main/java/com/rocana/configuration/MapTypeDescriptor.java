@@ -17,6 +17,7 @@
 package com.rocana.configuration;
 
 import com.google.common.base.Objects;
+import com.google.common.base.Supplier;
 
 import java.util.Collections;
 import java.util.List;
@@ -24,9 +25,9 @@ import java.util.List;
 class MapTypeDescriptor implements TypeDescriptor {
 
   private Class<?> targetType;
-  private TypeDescriptor valueTypeDescriptor;
+  private Supplier<TypeDescriptor> valueTypeDescriptor;
 
-  public MapTypeDescriptor(Class<?> targetType, TypeDescriptor valueTypeDescriptor) {
+  public MapTypeDescriptor(Class<?> targetType, Supplier<TypeDescriptor> valueTypeDescriptor) {
     this.targetType = targetType;
     this.valueTypeDescriptor = valueTypeDescriptor;
   }
@@ -43,7 +44,7 @@ class MapTypeDescriptor implements TypeDescriptor {
 
   @Override
   public List<TypeDescriptor> getChildren() {
-    return Collections.singletonList(valueTypeDescriptor);
+    return Collections.singletonList(valueTypeDescriptor.get());
   }
 
   @Override

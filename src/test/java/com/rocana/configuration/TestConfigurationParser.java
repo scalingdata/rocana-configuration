@@ -142,4 +142,36 @@ public class TestConfigurationParser {
     }
   }
 
+  @Test
+  public void testRecursiveObject() throws IOException {
+    ConfigurationParser parser = new ConfigurationParser();
+
+    try (InputStream inputStream = Resources.getResource("conf/recursive-object.conf").openStream()) {
+      RecursiveObject object = parser.parse(
+          new InputStreamReader(
+              inputStream
+          ),
+          RecursiveObject.class
+      );
+
+      Assert.assertNotNull(object);
+
+      Assert.assertEquals("value", object.getValue());
+
+      Assert.assertEquals("child", object.getChild().getValue());
+      Assert.assertEquals("grandchild", object.getChild().getChild().getValue());
+
+      Assert.assertEquals("0", object.getChildren().get(0).getValue());
+      Assert.assertEquals("1", object.getChildren().get(1).getValue());
+      Assert.assertEquals("2", object.getChildren().get(2).getValue());
+      Assert.assertEquals("3", object.getChildren().get(3).getValue());
+      Assert.assertEquals("4", object.getChildren().get(4).getValue());
+
+      Assert.assertEquals("0", object.getMap().get("zero").getValue());
+      Assert.assertEquals("1", object.getMap().get("one").getValue());
+      Assert.assertEquals("2", object.getMap().get("two").getValue());
+      Assert.assertEquals("3", object.getMap().get("three").getValue());
+      Assert.assertEquals("4", object.getMap().get("four").getValue());
+    }
+  }
 }

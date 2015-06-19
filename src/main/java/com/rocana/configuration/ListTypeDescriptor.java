@@ -17,6 +17,7 @@
 package com.rocana.configuration;
 
 import com.google.common.base.Objects;
+import com.google.common.base.Supplier;
 
 import java.util.Collections;
 import java.util.List;
@@ -24,9 +25,9 @@ import java.util.List;
 class ListTypeDescriptor implements TypeDescriptor {
 
   private Class<?> targetType;
-  private TypeDescriptor child;
+  private Supplier<TypeDescriptor> child;
 
-  public ListTypeDescriptor(Class<?> targetType, TypeDescriptor child) {
+  public ListTypeDescriptor(Class<?> targetType, Supplier<TypeDescriptor> child) {
     this.targetType = targetType;
     this.child = child;
   }
@@ -43,11 +44,7 @@ class ListTypeDescriptor implements TypeDescriptor {
 
   @Override
   public List<TypeDescriptor> getChildren() {
-    if (child == null) {
-      // used to load the type descriptor for recursive types
-      child = TypeMapping.descriptorRegistry.get(targetType);
-    }
-    return Collections.singletonList(child);
+    return Collections.singletonList(child.get());
   }
 
   @Override

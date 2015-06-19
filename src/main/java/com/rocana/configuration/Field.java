@@ -17,6 +17,7 @@
 package com.rocana.configuration;
 
 import com.google.common.base.Objects;
+import com.google.common.base.Supplier;
 
 import java.lang.reflect.Method;
 import java.util.List;
@@ -25,9 +26,9 @@ class Field implements TypeDescriptor {
 
   private String name;
   private Method method;
-  private TypeDescriptor typeDescriptor;
+  private Supplier<TypeDescriptor> typeDescriptor;
 
-  public Field(String name, Method method, TypeDescriptor typeDescriptor) {
+  public Field(String name, Method method, Supplier<TypeDescriptor> typeDescriptor) {
     this.name = name;
     this.method = method;
     this.typeDescriptor = typeDescriptor;
@@ -42,12 +43,12 @@ class Field implements TypeDescriptor {
   }
 
   public TypeDescriptor getTypeDescriptor() {
-    return typeDescriptor;
+    return typeDescriptor.get();
   }
 
   @Override
   public Class<?> getTargetType() {
-    return typeDescriptor.getTargetType();
+    return typeDescriptor.get().getTargetType();
   }
 
   @Override
@@ -57,7 +58,7 @@ class Field implements TypeDescriptor {
 
   @Override
   public List<TypeDescriptor> getChildren() {
-    return typeDescriptor.getChildren();
+    return typeDescriptor.get().getChildren();
   }
 
   @Override

@@ -18,7 +18,7 @@ package com.rocana.configuration;
 
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.MapMaker;
+import com.google.common.base.Supplier;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.rocana.configuration.annotations.ConfigurationCollection;
@@ -31,7 +31,6 @@ import java.lang.reflect.Method;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.ConcurrentMap;
 
 public class TypeMapping {
 
@@ -44,33 +43,32 @@ public class TypeMapping {
     Long.class
   );
 
-  public static final ConcurrentMap<Class<?>, TypeDescriptor> descriptorRegistry = new MapMaker().makeMap();
-
-  private final Set<Class<?>> seenClasses;
+  private final Map<Class<?>, Supplier<TypeDescriptor>> descriptorRegistry;
 
   public TypeMapping() {
-    this.seenClasses = Sets.newHashSet();
+    this.descriptorRegistry = Maps.newHashMap();
   }
 
   public static TypeDescriptor ofType(Class<?> targetType) {
     TypeMapping mapping = new TypeMapping();
 
-    TypeDescriptor descriptor = mapping.analyzeClass(targetType);
+    TypeDescriptor descriptor = mapping.analyzeClass(targetType).get();
 
     logger.debug("Type mapping for targetType:{} - {}", targetType, descriptor);
 
     return descriptor;
   }
 
-  private TypeDescriptor analyzeClass(Class<?> clazz) {
-    if (seenClasses.contains(clazz)) {
+  private Supplier<TypeDescriptor> analyzeClass(Class<?> clazz) {
+    if (descriptorRegistry.containsKey(clazz)) {
       logger.debug("Skipping class:{} - already scanned", clazz);
       return descriptorRegistry.get(clazz);
     }
 
     logger.debug("Scanning class:{}", clazz);
 
-    seenClasses.add(clazz);
+    TypeDescriptorSupplier supplier = new TypeDescriptorSupplier();
+    descriptorRegistry.put(clazz, supplier);
 
     Map<String, Field> propertyMapping = Maps.newHashMap();
 
@@ -83,18 +81,15 @@ public class TypeMapping {
       }
     }
 
-    TypeDescriptor typeDescriptor;
     if (propertyMapping.isEmpty()) {
       logger.debug("No annotated methods found:{}", clazz);
-      typeDescriptor = new ScalarTypeDescriptor(clazz);
+      supplier.setTypeDescriptor(new ScalarTypeDescriptor(clazz));
     } else {
-      typeDescriptor = new ObjectTypeDescriptor(clazz, propertyMapping);
-      logger.debug("Built typeDescriptor:{}", typeDescriptor);
+      supplier.setTypeDescriptor(new ObjectTypeDescriptor(clazz, propertyMapping));
+      logger.debug("Built typeDescriptor:{}", supplier.get());
     }
 
-    descriptorRegistry.put(clazz, typeDescriptor);
-
-    return typeDescriptor;
+    return supplier;
   }
 
   private Optional<Field> analyzeMethod(Method method) {
@@ -124,7 +119,7 @@ public class TypeMapping {
         method
       );
 
-      fieldDescriptor = new Field("{key}", method, new ScalarTypeDescriptor(String.class));
+      fieldDescriptor = new Field("{key}", method, new TypeDescriptorSupplier(new ScalarTypeDescriptor(String.class)));
     } else if (configurationPropertyAnnotation != null) {
       logger.debug("Found annotated method:{} annotation:{}", method, configurationPropertyAnnotation);
 
@@ -137,20 +132,21 @@ public class TypeMapping {
       );
 
       Class<?> argumentType = parameterTypes[0];
+      String name = configurationPropertyAnnotation.name();
 
       if (configurationCollectionAnnotation != null) {
+        Class<?> elementType = configurationCollectionAnnotation.elementType();
         if (List.class.isAssignableFrom(argumentType)) {
-          Class<?> elementType = configurationCollectionAnnotation.elementType();
-          fieldDescriptor = new Field(configurationPropertyAnnotation.name(), method, new ListTypeDescriptor(elementType, analyzeClass(elementType)));
+          fieldDescriptor = new Field(name, method, new TypeDescriptorSupplier(new ListTypeDescriptor(argumentType, analyzeClass(elementType))));
         } else if (Map.class.isAssignableFrom(argumentType)) {
-          fieldDescriptor = new Field(configurationPropertyAnnotation.name(), method, new MapTypeDescriptor(argumentType, analyzeClass(configurationCollectionAnnotation.elementType())));
+          fieldDescriptor = new Field(name, method, new TypeDescriptorSupplier(new MapTypeDescriptor(argumentType, analyzeClass(elementType))));
         } else {
           throw new UnsupportedOperationException("Unable to analyze type " + argumentType + " on method " + method);
         }
       } else if (scalarTypes.contains(argumentType)) {
-        fieldDescriptor = new Field(configurationPropertyAnnotation.name(), method, new ScalarTypeDescriptor(argumentType));
+        fieldDescriptor = new Field(name, method, new TypeDescriptorSupplier(new ScalarTypeDescriptor(argumentType)));
       } else {
-        fieldDescriptor = new Field(configurationPropertyAnnotation.name(), method, analyzeClass(argumentType));
+        fieldDescriptor = new Field(name, method, analyzeClass(argumentType));
       }
     }
 

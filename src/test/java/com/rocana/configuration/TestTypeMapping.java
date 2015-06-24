@@ -157,4 +157,32 @@ public class TestTypeMapping {
     Assert.assertEquals(Map.class, mapDescriptor.getTargetType());
     Assert.assertEquals(typeDescriptor, mapDescriptor.getChildren().get(0));
   }
+
+  @Test
+  public void testObjectRuntimeObject() {
+    TypeDescriptor typeDescriptor = TypeMapping.ofType(RuntimeObject.class);
+
+    Assert.assertNotNull(typeDescriptor);
+    Assert.assertEquals(ObjectTypeDescriptor.class, typeDescriptor.getClass());
+    ObjectTypeDescriptor runtimeObjectDescriptor = (ObjectTypeDescriptor) typeDescriptor;
+
+    TypeDescriptor childTypeDescriptor = runtimeObjectDescriptor.getChildMap().get("child");
+    Assert.assertEquals(Field.class, childTypeDescriptor.getClass());
+
+    Field childDescriptor = (Field) childTypeDescriptor;
+    Assert.assertEquals(ObjectTypeDescriptor.class, childDescriptor.getTypeDescriptor().getClass());
+    Assert.assertEquals(RuntimeProperty.class, childDescriptor.getTargetType());
+
+    childTypeDescriptor = childDescriptor.getTypeDescriptor();
+    Assert.assertEquals(ObjectTypeDescriptor.class, childTypeDescriptor.getClass());
+
+    ObjectTypeDescriptor runtimePropertyDescriptor = (ObjectTypeDescriptor) childTypeDescriptor;
+    childTypeDescriptor = runtimePropertyDescriptor.getChildMap().get("value");
+    Assert.assertEquals(Field.class, childTypeDescriptor.getClass());
+
+    Field valueDescriptor = (Field) childTypeDescriptor;
+    Assert.assertEquals(String.class, valueDescriptor.getTargetType());
+    Assert.assertEquals(ScalarTypeDescriptor.class, valueDescriptor.getTypeDescriptor().getClass());
+    Assert.assertFalse(valueDescriptor.getTypeDescriptor().hasChildren());
+  }
 }

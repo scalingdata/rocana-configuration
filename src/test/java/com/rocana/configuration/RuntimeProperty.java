@@ -14,21 +14,30 @@
  * limitations under the License.
  */
 
-package com.rocana.configuration.annotations;
+package com.rocana.configuration;
 
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
+import com.google.common.base.Objects;
+import com.rocana.configuration.annotations.ConfigurationProperty;
 
-/**
- * <p>
- * Marks a method that should capture the field or map key name of the
- * containing type.
- * </p>
- */
-@Target({ ElementType.METHOD, ElementType.TYPE })
-@Retention(RetentionPolicy.RUNTIME)
-public @interface ConfigurationFieldName {
+@ConfigurationProperty(name = "child")
+public class RuntimeProperty {
+
+  private String value;
+
+  public String getValue() {
+    return value;
+  }
+
+  @ConfigurationProperty(name = "value")
+  public void setValue(String value) {
+    this.value = value;
+  }
+
+  @Override
+  public String toString() {
+    return Objects.toStringHelper(this)
+      .add("value", value)
+      .toString();
+  }
 
 }

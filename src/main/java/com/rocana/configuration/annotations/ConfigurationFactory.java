@@ -21,14 +21,8 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
-/**
- * <p>
- * Marks a method that should capture the field or map key name of the
- * containing type.
- * </p>
- */
-@Target({ ElementType.METHOD, ElementType.TYPE })
 @Retention(RetentionPolicy.RUNTIME)
-public @interface ConfigurationFieldName {
+@Target(ElementType.METHOD)
+public @interface ConfigurationFactory {
 
 }

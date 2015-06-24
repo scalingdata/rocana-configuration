@@ -19,11 +19,14 @@ package com.rocana.configuration;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Supplier;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.rocana.configuration.annotations.ConfigurationCollection;
+import com.rocana.configuration.annotations.ConfigurationFactory;
 import com.rocana.configuration.annotations.ConfigurationFieldName;
 import com.rocana.configuration.annotations.ConfigurationProperty;
+import java.lang.reflect.InvocationTargetException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -73,11 +76,18 @@ public class TypeMapping {
     Map<String, Field> propertyMapping = Maps.newHashMap();
 
     for (Method method : clazz.getMethods()) {
-      Optional<Field> fieldDescriptorOptional = analyzeMethod(method);
+      if (method.isAnnotationPresent(ConfigurationFactory.class)) {
+        List<Field> fields = analyzeConfigurationFactory(method, clazz);
+        for (Field fieldDescriptor : fields) {
+          propertyMapping.put(fieldDescriptor.getName(), fieldDescriptor);
+        }
+      } else {
+        Optional<Field> fieldDescriptorOptional = analyzeMethod(method);
 
-      if (fieldDescriptorOptional.isPresent()) {
-        Field fieldDescriptor = fieldDescriptorOptional.get();
-        propertyMapping.put(fieldDescriptor.getName(), fieldDescriptor);
+        if (fieldDescriptorOptional.isPresent()) {
+          Field fieldDescriptor = fieldDescriptorOptional.get();
+          propertyMapping.put(fieldDescriptor.getName(), fieldDescriptor);
+        }
       }
     }
 
@@ -92,17 +102,58 @@ public class TypeMapping {
     return supplier;
   }
 
-  private Optional<Field> analyzeMethod(Method method) {
-    Field fieldDescriptor = null;
+  private List<Field> analyzeConfigurationFactory(Method method, Class<?> clazz) {
+    List<Field> fields = Lists.newArrayList();
 
+    try {
+      List<Map.Entry<Class<?>, Method>> classMethodPairs = (List<Map.Entry<Class<?>, Method>>) method.invoke(null);
+      for (Map.Entry<Class<?>, Method> classMethodPair : classMethodPairs) {
+        Optional<Field> fieldDescriptorOptional = analyzeArgumentType(classMethodPair.getKey(), classMethodPair.getValue());
+
+        if (fieldDescriptorOptional.isPresent()) {
+          fields.add(fieldDescriptorOptional.get());
+        }
+      }
+    } catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException | ClassCastException ex) {
+      logger.error("Unable to invoke method {}.{}(): {}", clazz.getSimpleName(), method.getName(), ex.getMessage());
+      logger.debug("Stack trace follows.", ex);
+    }
+
+    return fields;
+  }
+
+  private Optional<Field> analyzeArgumentType(Class<?> argumentType, Method method) {
+    ConfigurationProperty configurationPropertyAnnotation = argumentType.getAnnotation(ConfigurationProperty.class);
+    ConfigurationCollection configurationCollectionAnnotation = argumentType.getAnnotation(ConfigurationCollection.class);
+    ConfigurationFieldName configurationFieldName = argumentType.getAnnotation(ConfigurationFieldName.class);
+
+    Class<?>[] parameterTypes = method.getParameterTypes();
+    Preconditions.checkArgument(
+      parameterTypes.length == 1,
+      "Annotated method %s takes more than one argument (parameters:%s)",
+      method.getName(),
+      parameterTypes
+    );
+
+    Preconditions.checkArgument(
+      parameterTypes[0].isAssignableFrom(argumentType),
+      "Annotated method %s takes unsupported argument type %s expected %s",
+      method.getName(),
+      parameterTypes[0],
+      argumentType
+    );
+
+    return buildField(method, argumentType, configurationPropertyAnnotation, configurationCollectionAnnotation, configurationFieldName);
+  }
+
+  private Optional<Field> analyzeMethod(Method method) {
     ConfigurationProperty configurationPropertyAnnotation = method.getAnnotation(ConfigurationProperty.class);
     ConfigurationCollection configurationCollectionAnnotation = method.getAnnotation(ConfigurationCollection.class);
     ConfigurationFieldName configurationFieldName = method.getAnnotation(ConfigurationFieldName.class);
 
-    if (configurationFieldName != null) {
-      logger.debug("Found annotated method:{} annotation:{}", method, configurationFieldName);
-
-      Class<?>[] parameterTypes = method.getParameterTypes();
+    Class<?> argumentType = null;
+    Class<?>[] parameterTypes = method.getParameterTypes();
+    if (configurationPropertyAnnotation != null || configurationFieldName != null) {
       Preconditions.checkArgument(
         parameterTypes.length == 1,
         "Annotated method %s takes more than one argument (parameters:%s)",
@@ -110,7 +161,18 @@ public class TypeMapping {
         parameterTypes
       );
 
-      Class<?> argumentType = parameterTypes[0];
+      argumentType = parameterTypes[0];
+    }
+
+    return buildField(method, argumentType, configurationPropertyAnnotation, configurationCollectionAnnotation, configurationFieldName);
+  }
+
+  private Optional<Field> buildField(Method method, Class<?> argumentType, ConfigurationProperty configurationPropertyAnnotation,
+    ConfigurationCollection configurationCollectionAnnotation, ConfigurationFieldName configurationFieldName) {
+    Field fieldDescriptor = null;
+
+    if (configurationFieldName != null) {
+      logger.debug("Found annotated method:{} annotation:{}", method, configurationFieldName);
 
       Preconditions.checkArgument(
         argumentType.equals(String.class),
@@ -123,15 +185,6 @@ public class TypeMapping {
     } else if (configurationPropertyAnnotation != null) {
       logger.debug("Found annotated method:{} annotation:{}", method, configurationPropertyAnnotation);
 
-      Class<?>[] parameterTypes = method.getParameterTypes();
-      Preconditions.checkArgument(
-        parameterTypes.length == 1,
-        "Annotated method %s takes more than one argument (parameters:%s)",
-        method.getName(),
-        parameterTypes
-      );
-
-      Class<?> argumentType = parameterTypes[0];
       String name = configurationPropertyAnnotation.name();
 
       if (configurationCollectionAnnotation != null) {

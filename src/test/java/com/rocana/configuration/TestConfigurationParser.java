@@ -174,10 +174,10 @@ public class TestConfigurationParser {
 
     try (InputStream inputStream = Resources.getResource("conf/recursive-object.conf").openStream()) {
       RecursiveObject object = parser.parse(
-          new InputStreamReader(
-              inputStream
-          ),
-          RecursiveObject.class
+        new InputStreamReader(
+          inputStream
+        ),
+        RecursiveObject.class
       );
 
       Assert.assertNotNull(object);
@@ -198,6 +198,35 @@ public class TestConfigurationParser {
       Assert.assertEquals("2", object.getMap().get("two").getValue());
       Assert.assertEquals("3", object.getMap().get("three").getValue());
       Assert.assertEquals("4", object.getMap().get("four").getValue());
+    }
+  }
+
+  @Test
+  public void testRuntimeObject() throws IOException {
+    ConfigurationParser parser = new ConfigurationParser();
+
+    try (InputStream inputStream = Resources.getResource("conf/runtime-object.conf").openStream()) {
+      RuntimeObject object = parser.parse(
+        new InputStreamReader(
+          inputStream
+        ),
+        RuntimeObject.class
+      );
+
+      Assert.assertNotNull(object);
+      Assert.assertNotNull(object.getChildren());
+      Assert.assertEquals(3, object.getChildren().size());
+
+      RuntimeProperty prop;
+
+      prop = (RuntimeProperty) object.getChildren().get(0);
+      Assert.assertEquals("a", prop.getValue());
+
+      prop = (RuntimeProperty) object.getChildren().get(1);
+      Assert.assertEquals("b", prop.getValue());
+
+      prop = (RuntimeProperty) object.getChildren().get(2);
+      Assert.assertEquals("c", prop.getValue());
     }
   }
 }

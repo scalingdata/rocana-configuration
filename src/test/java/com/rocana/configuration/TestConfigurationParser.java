@@ -72,6 +72,32 @@ public class TestConfigurationParser {
   }
 
   @Test
+  public void testEscapedStrings() throws IOException {
+    ConfigurationParser parser = new ConfigurationParser();
+
+    try (InputStream inputStream = Resources.getResource("conf/escaped-strings.conf").openStream()) {
+      ListScalar object = parser.parse(
+        new InputStreamReader(
+          inputStream
+        ),
+        ListScalar.class
+      );
+
+      Assert.assertNotNull(object);
+
+      List<String> names = object.getNames();
+
+      Assert.assertNotNull(names);
+      Assert.assertEquals(5, names.size());
+      Assert.assertEquals("one\"one", names.get(0));
+      Assert.assertEquals("two\"two\\", names.get(1));
+      Assert.assertEquals("three\"three", names.get(2));
+      Assert.assertEquals("four\nfour", names.get(3));
+      Assert.assertEquals("five\tfive", names.get(4));
+    }
+  }
+
+  @Test
   public void testListObject() throws IOException {
     ConfigurationParser parser = new ConfigurationParser();
 

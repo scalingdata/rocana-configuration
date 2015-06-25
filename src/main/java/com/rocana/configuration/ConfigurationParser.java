@@ -38,6 +38,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import org.apache.commons.lang3.StringEscapeUtils;
 
 public class ConfigurationParser {
 
@@ -96,7 +97,9 @@ public class ConfigurationParser {
     public List<Object> visitValueString(com.rocana.configuration.antlr.ConfigurationParser.ValueStringContext ctx) {
       String text = ctx.QUOTED_STRING().getText();
 
-      return Lists.<Object>newArrayList(text.substring(1, text.length() - 1));
+      String value = StringEscapeUtils.unescapeJava(text.substring(1, text.length() - 1));
+
+      return Lists.<Object>newArrayList(value);
     }
 
     @Override

@@ -35,7 +35,21 @@ public class TestTypeMapping {
 
     List<TypeDescriptor> children = typeDescriptor.getChildren();
 
-    Assert.assertEquals(8, children.size());
+    Assert.assertEquals(9, children.size());
+  }
+
+  @Test
+  public void testEmptyObject() {
+    TypeDescriptor typeDescriptor = TypeMapping.ofType(EmptyObject.class);
+
+    Assert.assertNotNull(typeDescriptor);
+
+    Assert.assertEquals(true, typeDescriptor.hasChildren());
+    Assert.assertEquals(EmptyObject.class, typeDescriptor.getTargetType());
+
+    List<TypeDescriptor> children = typeDescriptor.getChildren();
+
+    Assert.assertEquals(0, children.size());
   }
 
   @Test
@@ -96,7 +110,7 @@ public class TestTypeMapping {
 
     Assert.assertEquals(true, flatObjectDescriptor.hasChildren());
     Assert.assertEquals(FlatObject.class, flatObjectDescriptor.getTargetType());
-    Assert.assertEquals(8, flatObjectDescriptor.getChildren().size());
+    Assert.assertEquals(9, flatObjectDescriptor.getChildren().size());
   }
 
   @Test
@@ -114,7 +128,7 @@ public class TestTypeMapping {
 
     Assert.assertEquals(true, flatObjectDescriptor.hasChildren());
     Assert.assertEquals(FlatObject.class, flatObjectDescriptor.getTargetType());
-    Assert.assertEquals(8, flatObjectDescriptor.getChildren().size());
+    Assert.assertEquals(9, flatObjectDescriptor.getChildren().size());
   }
 
   @Test

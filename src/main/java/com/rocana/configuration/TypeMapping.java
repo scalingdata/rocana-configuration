@@ -73,6 +73,11 @@ public class TypeMapping {
     TypeDescriptorSupplier supplier = new TypeDescriptorSupplier();
     descriptorRegistry.put(clazz, supplier);
 
+    if (scalarTypes.contains(clazz)) {
+      supplier.setTypeDescriptor(new ScalarTypeDescriptor(clazz));
+      return supplier;
+    }
+
     Map<String, Field> propertyMapping = Maps.newHashMap();
 
     for (Method method : clazz.getMethods()) {
@@ -91,13 +96,8 @@ public class TypeMapping {
       }
     }
 
-    if (propertyMapping.isEmpty()) {
-      logger.debug("No annotated methods found:{}", clazz);
-      supplier.setTypeDescriptor(new ScalarTypeDescriptor(clazz));
-    } else {
-      supplier.setTypeDescriptor(new ObjectTypeDescriptor(clazz, propertyMapping));
-      logger.debug("Built typeDescriptor:{}", supplier.get());
-    }
+    supplier.setTypeDescriptor(new ObjectTypeDescriptor(clazz, propertyMapping));
+    logger.debug("Built typeDescriptor:{}", supplier.get());
 
     return supplier;
   }

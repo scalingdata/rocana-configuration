@@ -47,6 +47,7 @@ public class TestConfigurationParser {
       Assert.assertEquals(1.0d, object.getFloatValue().doubleValue(), 0.0d);
       Assert.assertEquals(1, object.getIntegerValue().intValue());
       Assert.assertEquals(1L, object.getLongValue().longValue());
+      Assert.assertNotNull(object.getObjectValue());
     }
   }
 

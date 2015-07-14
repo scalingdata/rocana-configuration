@@ -31,6 +31,7 @@ class FlatObject {
   private Float floatValue;
   private String sizeValue;
   private String durationValue;
+  private EmptyObject objectValue;
 
   public String getFieldName() {
     return fieldName;
@@ -104,6 +105,15 @@ class FlatObject {
     this.durationValue = durationValue;
   }
 
+  public EmptyObject getObjectValue() {
+    return objectValue;
+  }
+
+  @ConfigurationProperty(name = "object-value")
+  public void setObjectValue(EmptyObject objectValue) {
+    this.objectValue = objectValue;
+  }
+
   @Override
   public String toString() {
     return Objects.toStringHelper(this)
@@ -115,6 +125,7 @@ class FlatObject {
       .add("floatValue", floatValue)
       .add("sizeValue", sizeValue)
       .add("durationValue", durationValue)
+      .add("objectValue", objectValue)
       .toString();
   }
 

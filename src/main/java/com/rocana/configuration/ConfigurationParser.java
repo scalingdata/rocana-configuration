@@ -157,8 +157,10 @@ public class ConfigurationParser {
           logger.debug("Created target:{}", target);
 
           valueStack.push(target);
-        } catch (InstantiationException | IllegalAccessException e) {
-          e.printStackTrace();  // TODO: Unhandled catch block!
+        } catch (InstantiationException | IllegalAccessException ex) {
+          int line = ctx.start.getLine();
+          int pos = ctx.start.getCharPositionInLine();
+          throw new ConfigurationException(String.format("Unknown error at %d:%d", line, pos), ex);
         }
       } else if (currentType instanceof MapTypeDescriptor) {
         Object target = Maps.newHashMap();
@@ -194,6 +196,12 @@ public class ConfigurationParser {
         ObjectTypeDescriptor objectDescriptor = (ObjectTypeDescriptor) currentType;
 
         Field field = objectDescriptor.getChildMap().get(fieldName);
+        if (field == null) {
+          int line = ctx.start.getLine();
+          int pos = ctx.start.getCharPositionInLine();
+          throw new ConfigurationException(String.format("Unexpected option '%s' at %d:%d. Expected one of: %s",
+            fieldName, line, pos, objectDescriptor.getChildMap().keySet().toString()));
+        }
 
         typeStack.push(field.getTypeDescriptor());
 
@@ -204,8 +212,20 @@ public class ConfigurationParser {
 
         try {
           field.getMethod().invoke(valueStack.peek(), value.get(0));
-        } catch (IllegalAccessException | InvocationTargetException e) {
-          e.printStackTrace();  // TODO: Unhandled catch block!
+        } catch (IllegalArgumentException ex) {
+          int line = ctx.start.getLine();
+          int pos = ctx.start.getCharPositionInLine();
+          if (ex.getMessage().contains("argument type mismatch")) {
+            throw new ConfigurationException(String.format("Unexpected type '%s' at %d:%d. Expected: %s",
+              value.get(0).getClass().getSimpleName(), line, pos,
+              field.getMethod().getParameterTypes()[0].getSimpleName()), ex);
+          } else {
+            throw new ConfigurationException(String.format("Unknown error at %d:%d", line, pos), ex);
+          }
+        } catch (IllegalAccessException | InvocationTargetException ex) {
+          int line = ctx.start.getLine();
+          int pos = ctx.start.getCharPositionInLine();
+          throw new ConfigurationException(String.format("Unknown error at %d:%d", line, pos), ex);
         }
       } else if (currentType instanceof MapTypeDescriptor) {
         MapTypeDescriptor mapTypeDescriptor = (MapTypeDescriptor) currentType;

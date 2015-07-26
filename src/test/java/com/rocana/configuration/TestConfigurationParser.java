@@ -230,4 +230,32 @@ public class TestConfigurationParser {
       Assert.assertEquals("c", prop.getValue());
     }
   }
+
+  @Test(expected = ConfigurationException.class)
+  public void testUnknownOption() throws IOException {
+    ConfigurationParser parser = new ConfigurationParser();
+
+    try (InputStream inputStream = Resources.getResource("conf/unknown-option.conf").openStream()) {
+      parser.parse(
+        new InputStreamReader(
+          inputStream
+        ),
+        FlatObject.class
+      );
+    }
+  }
+
+  @Test(expected = ConfigurationException.class)
+  public void testUnexpectedType() throws IOException {
+    ConfigurationParser parser = new ConfigurationParser();
+
+    try (InputStream inputStream = Resources.getResource("conf/unexpected-type.conf").openStream()) {
+      parser.parse(
+        new InputStreamReader(
+          inputStream
+        ),
+        FlatObject.class
+      );
+    }
+  }
 }

@@ -23,9 +23,14 @@ import com.google.common.collect.Sets;
 import com.google.common.io.CharSource;
 import com.rocana.configuration.antlr.ConfigurationBaseVisitor;
 import com.rocana.configuration.antlr.ConfigurationLexer;
+import org.antlr.v4.runtime.ANTLRErrorListener;
 import org.antlr.v4.runtime.ANTLRInputStream;
+import org.antlr.v4.runtime.BaseErrorListener;
 import org.antlr.v4.runtime.CommonTokenStream;
+import org.antlr.v4.runtime.RecognitionException;
+import org.antlr.v4.runtime.Recognizer;
 import org.antlr.v4.runtime.tree.ParseTree;
+import org.apache.commons.lang3.StringEscapeUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -38,7 +43,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import org.apache.commons.lang3.StringEscapeUtils;
 
 public class ConfigurationParser {
 
@@ -55,12 +59,27 @@ public class ConfigurationParser {
   public <T> T parse(Reader reader, Class<T> targetType) throws IOException {
     logger.debug("Parsing configuration for type:{}", targetType);
 
+    ANTLRErrorListener listener = new BaseErrorListener() {
+
+      @Override
+      public void syntaxError(Recognizer<?, ?> recognizer, Object offendingSymbol, int line, int charPositionInLine, String msg, RecognitionException e) {
+        throw new ConfigurationException(String.format("Unable to parse configuration: %s (at line:%s pos:%s)", msg, line, charPositionInLine), e);
+      }
+
+    };
+
+    TypeDescriptor typeDescriptor = TypeMapping.ofType(targetType);
+
     ANTLRInputStream inputStream = new ANTLRInputStream(reader);
     ConfigurationLexer lexer = new ConfigurationLexer(inputStream);
-    CommonTokenStream tokenStream = new CommonTokenStream(lexer);
+    lexer.removeErrorListeners();
+    lexer.addErrorListener(listener);
 
+    CommonTokenStream tokenStream = new CommonTokenStream(lexer);
     com.rocana.configuration.antlr.ConfigurationParser parser = new com.rocana.configuration.antlr.ConfigurationParser(tokenStream);
-    TypeDescriptor typeDescriptor = TypeMapping.ofType(targetType);
+
+    parser.removeErrorListeners();
+    parser.addErrorListener(listener);
 
     ParseTree parseTree = parser.config();
 
@@ -184,6 +203,7 @@ public class ConfigurationParser {
     }
 
     @Override
+    @SuppressWarnings("unchecked")
     public List<Object> visitField(com.rocana.configuration.antlr.ConfigurationParser.FieldContext ctx) {
       String fieldName = ctx.ID().getText();
       List<Object> value = null;
@@ -268,6 +288,7 @@ public class ConfigurationParser {
     }
 
     @Override
+    @SuppressWarnings("unchecked")
     public List<Object> visitArrayItem(com.rocana.configuration.antlr.ConfigurationParser.ArrayItemContext ctx) {
       logger.debug("Visit array item. typeStack:{}", typeStack);
 
@@ -281,6 +302,7 @@ public class ConfigurationParser {
     }
 
     @Override
+    @SuppressWarnings("unchecked")
     public List<Object> visitConfig(com.rocana.configuration.antlr.ConfigurationParser.ConfigContext ctx) {
       logger.debug("Visit configuration");
 

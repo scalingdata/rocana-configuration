@@ -16,6 +16,7 @@
 
 package com.rocana.configuration;
 
+import com.google.common.io.CharSource;
 import com.google.common.io.Resources;
 import org.junit.Assert;
 import org.junit.Test;
@@ -258,4 +259,49 @@ public class TestConfigurationParser {
       );
     }
   }
+
+  /*
+   * Invalid syntax 1: A dot instead of a comma as a separator between fields.
+   */
+  @Test(expected = ConfigurationException.class)
+  public void testInvalidSyntax1() throws Exception {
+    ConfigurationParser parser = new ConfigurationParser();
+
+    parser.parse(CharSource.wrap("{ a: \"1\". b: \"2\" }"), FlatObject.class);
+  }
+
+  /*
+   * Invalid syntax 2: Missing a closing curly brace.
+   */
+  @Test(expected =  ConfigurationException.class)
+  public void testInvalidSyntax2() throws Exception {
+    ConfigurationParser parser = new ConfigurationParser();
+
+    parser.parse(CharSource.wrap("{ a: 1"), FlatObject.class);
+  }
+
+  /*
+   * Invalid syntax 3: Ambiguous duration value vs. field ID. A human could
+   * think this is "field a of type int, field minutes of type int" with no
+   * comma rather than "field a of type duration, missing ID in field 2." which
+   * is what it really is.
+   */
+  @Test(expected = ConfigurationException.class)
+  public void testInvalidSyntax3() throws Exception {
+    ConfigurationParser parser = new ConfigurationParser();
+
+    parser.parse(CharSource.wrap("{ a: 1 minutes: 2"), FlatObject.class);
+  }
+
+  /*
+   * Invalid syntax 4: Field names can not begin with a number. This parses as
+   * "INT : INT" (illegal) rather than "ID : INT".
+   */
+  @Test(expected = ConfigurationException.class)
+  public void testInvalidSyntax4() throws Exception {
+    ConfigurationParser parser = new ConfigurationParser();
+
+    parser.parse(CharSource.wrap("{ 7: 1 }"), FlatObject.class);
+  }
+
 }

@@ -30,6 +30,7 @@ class FlatObject {
   private String stringValue;
   private Long longValue;
   private Float floatValue;
+  private Double doubleValue;
   private String sizeValue;
   private Period durationValue;
   private EmptyObject objectValue;
@@ -88,6 +89,15 @@ class FlatObject {
     this.floatValue = floatValue;
   }
 
+  public Double getDoubleValue() {
+    return doubleValue;
+  }
+
+  @ConfigurationProperty(name = "double-value")
+  public void setDoubleValue(Double doubleValue) {
+    this.doubleValue = doubleValue;
+  }
+
   public String getSizeValue() {
     return sizeValue;
   }
@@ -124,6 +134,7 @@ class FlatObject {
       .add("stringValue", stringValue)
       .add("longValue", longValue)
       .add("floatValue", floatValue)
+      .add("doubleValue", doubleValue)
       .add("sizeValue", sizeValue)
       .add("durationValue", durationValue)
       .add("objectValue", objectValue)

@@ -45,6 +45,7 @@ value: value_variable |
   value_duration |
   value_long |
   value_float |
+  value_double |
   value_int |
   value_string |
   value_boolean |
@@ -58,6 +59,7 @@ value_size: SIZE # ValueSize;
 value_duration: (DURATION_ISO8601 | DURATION_SIMPLE) # ValueDuration;
 value_long: LONG # ValueLong;
 value_float: FLOAT # ValueFloat;
+value_double: DOUBLE # ValueDouble;
 value_int: INT # ValueInteger;
 value_string: QUOTED_STRING # ValueString;
 value_variable: VARIABLE # ValueVariable;
@@ -97,6 +99,7 @@ BRACE_RIGHT: '}';
  */
 LONG: '-'? DIGITS 'L';
 FLOAT: '-'? DIGITS ((DOT DIGITS) 'F'? | 'F');
+DOUBLE: '-'? DIGITS ((DOT DIGITS) 'D' | 'D');
 DURATION_ISO8601: 'P' (
   (FLOAT_IMPLICIT 'Y' FLOAT_IMPLICIT 'M' FLOAT_IMPLICIT 'D' DURATION_TIME_ISO8601) |
   (FLOAT_IMPLICIT 'Y' FLOAT_IMPLICIT 'M' FLOAT_IMPLICIT 'D') |

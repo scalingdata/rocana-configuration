@@ -35,7 +35,7 @@ public class TestTypeMapping {
 
     List<TypeDescriptor> children = typeDescriptor.getChildren();
 
-    Assert.assertEquals(9, children.size());
+    Assert.assertEquals(10, children.size());
   }
 
   @Test
@@ -110,7 +110,7 @@ public class TestTypeMapping {
 
     Assert.assertEquals(true, flatObjectDescriptor.hasChildren());
     Assert.assertEquals(FlatObject.class, flatObjectDescriptor.getTargetType());
-    Assert.assertEquals(9, flatObjectDescriptor.getChildren().size());
+    Assert.assertEquals(10, flatObjectDescriptor.getChildren().size());
   }
 
   @Test
@@ -128,7 +128,7 @@ public class TestTypeMapping {
 
     Assert.assertEquals(true, flatObjectDescriptor.hasChildren());
     Assert.assertEquals(FlatObject.class, flatObjectDescriptor.getTargetType());
-    Assert.assertEquals(9, flatObjectDescriptor.getChildren().size());
+    Assert.assertEquals(10, flatObjectDescriptor.getChildren().size());
   }
 
   @Test

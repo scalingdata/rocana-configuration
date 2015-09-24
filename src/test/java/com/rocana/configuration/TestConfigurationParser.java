@@ -46,6 +46,7 @@ public class TestConfigurationParser {
       Assert.assertEquals("1 GB", object.getSizeValue());
       Assert.assertEquals("Hello world", object.getStringValue());
       Assert.assertEquals(1.0d, object.getFloatValue().doubleValue(), 0.0d);
+      Assert.assertEquals(1.0d, object.getDoubleValue(), 0.0d);
       Assert.assertEquals(1, object.getIntegerValue().intValue());
       Assert.assertEquals(1L, object.getLongValue().longValue());
       Assert.assertNotNull(object.getObjectValue());
@@ -302,6 +303,34 @@ public class TestConfigurationParser {
     ConfigurationParser parser = new ConfigurationParser();
 
     parser.parse(CharSource.wrap("{ 7: 1 }"), FlatObject.class);
+  }
+
+  /**
+   * In rocana-configuration 1.x, floating point values default to a float for backwards compatibility to 1.0 which
+   * didn't have a double type. This will change in 2.0 to better match Java's type system.
+   * @throws IOException If reading from the resource fails
+   */
+  @Test
+  public void testDoubleRequiresType() throws IOException {
+    ConfigurationParser parser = new ConfigurationParser();
+
+    try (InputStream inputStream = Resources.getResource("conf/double-requires-type.conf").openStream()) {
+      FlatObject object = parser.parse(
+        new InputStreamReader(
+          inputStream
+        ),
+        FlatObject.class
+      );
+
+      Assert.fail("Expected a ConfigurationException for unexpected type 'Float'");
+    } catch (ConfigurationException ex) {
+      /*
+       * Verify that there is an error when setting a double value to a constant  without the type specifier (D or F).
+       * The check specifically makes sure that the error is from line 23 of the double-requires-type.conf file.
+       * On line 22, the same constant is used but where a float is expected so that should not cause a parse error.
+       */
+      Assert.assertTrue("Unexpected message in ConfigurationException: " + ex.getMessage(), ex.getMessage().startsWith("Unexpected type 'Float' at 23:2"));
+    }
   }
 
 }

@@ -104,6 +104,7 @@ public class ConfigurationParser {
     private static final Set<String> booleanTrueValues = Sets.newHashSet("true", "on", "enabled", "yes");
     private static final Pattern patternLong = Pattern.compile("^(\\d+)(?:\\s*[lL])?$");
     private static final Pattern patternFloat = Pattern.compile("^(\\d+(?:\\.\\d+)?)(?:\\s*[fF])?$");
+    private static final Pattern patternDouble = Pattern.compile("^(\\d+(?:\\.\\d+)?)(?:\\s*[dD])?$");
     private static final PeriodParser DURATION_PARSER_ISO8601 = new PeriodFormatterBuilder()
       .appendLiteral("P")
       .appendYears().appendSuffix("Y")
@@ -174,6 +175,17 @@ public class ConfigurationParser {
       }
 
       return Lists.<Object>newArrayList(Float.parseFloat(matcher.group(1)));
+    }
+
+    @Override
+    public List<Object> visitValueDouble(com.rocana.configuration.antlr.ConfigurationParser.ValueDoubleContext ctx) {
+      Matcher matcher = patternDouble.matcher(ctx.DOUBLE().getText());
+
+      if (!matcher.matches()) {
+        throw new ConfigurationException("Double value " + ctx.DOUBLE().getText() + " can not be parsed");
+      }
+
+      return Lists.<Object>newArrayList(Double.parseDouble(matcher.group(1)));
     }
 
     @Override

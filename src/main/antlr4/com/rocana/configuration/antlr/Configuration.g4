@@ -40,13 +40,22 @@ array_item: value # ArrayItem;
 /*
  * Primary value type. Encompasses all other legal value types.
  */
-value: value_variable | value_size | value_duration | value_long | value_float | value_int | value_string | value_boolean | dictionary | array;
+value: value_variable |
+  value_size |
+  value_duration |
+  value_long |
+  value_float |
+  value_int |
+  value_string |
+  value_boolean |
+  dictionary |
+  array;
 
 /*
  * Specific value types.
  */
 value_size: SIZE # ValueSize;
-value_duration: DURATION # ValueDuration;
+value_duration: (DURATION_ISO8601 | DURATION_SIMPLE) # ValueDuration;
 value_long: LONG # ValueLong;
 value_float: FLOAT # ValueFloat;
 value_int: INT # ValueInteger;
@@ -86,22 +95,43 @@ BRACE_RIGHT: '}';
 /*
  * Literal types.
  */
-INT: '-'? DIGITS;
 LONG: '-'? DIGITS 'L';
 FLOAT: '-'? DIGITS ((DOT DIGITS) 'F'? | 'F');
-SIZE: '-'? DIGITS (DOT DIGITS)? WS? [KMGTP]? [bB];
-DURATION: '-'? DIGITS WS? (
-  UNIT_TIME_MICRO |
-  UNIT_TIME_NANO |
-  UNIT_TIME_MILLI |
-  UNIT_TIME_SECOND |
-  UNIT_TIME_MINUTE |
-  UNIT_TIME_HOUR |
-  UNIT_TIME_DAY |
-  UNIT_TIME_WEEK |
-  UNIT_TIME_MONTH |
-  UNIT_TIME_YEAR
-  );
+DURATION_ISO8601: 'P' (
+  (FLOAT_IMPLICIT 'Y' FLOAT_IMPLICIT 'M' FLOAT_IMPLICIT 'D' DURATION_TIME_ISO8601) |
+  (FLOAT_IMPLICIT 'Y' FLOAT_IMPLICIT 'M' FLOAT_IMPLICIT 'D') |
+  (FLOAT_IMPLICIT 'Y' FLOAT_IMPLICIT 'M') |
+  (FLOAT_IMPLICIT 'Y') |
+
+  (FLOAT_IMPLICIT 'Y' FLOAT_IMPLICIT 'D' DURATION_TIME_ISO8601) |
+  (FLOAT_IMPLICIT 'Y' FLOAT_IMPLICIT 'D') |
+
+  (FLOAT_IMPLICIT 'Y' DURATION_TIME_ISO8601) |
+
+  (FLOAT_IMPLICIT 'M' FLOAT_IMPLICIT 'D' DURATION_TIME_ISO8601) |
+  (FLOAT_IMPLICIT 'M' FLOAT_IMPLICIT 'D') |
+  (FLOAT_IMPLICIT 'M') |
+
+  (FLOAT_IMPLICIT 'M' DURATION_TIME_ISO8601) |
+
+  (FLOAT_IMPLICIT 'D' DURATION_TIME_ISO8601) |
+  (FLOAT_IMPLICIT 'D') |
+
+  (DURATION_TIME_ISO8601)
+);
+DURATION_SIMPLE: (
+  (FLOAT_IMPLICIT WS UNIT_TIME_YEAR) |
+  (FLOAT_IMPLICIT WS UNIT_TIME_MONTH) |
+  (FLOAT_IMPLICIT WS UNIT_TIME_DAY) |
+  (FLOAT_IMPLICIT WS UNIT_TIME_HOUR) |
+  (FLOAT_IMPLICIT WS UNIT_TIME_MINUTE) |
+  (FLOAT_IMPLICIT WS UNIT_TIME_SECOND) |
+  (FLOAT_IMPLICIT WS UNIT_TIME_MILLI) |
+  (FLOAT_IMPLICIT WS UNIT_TIME_NANO) |
+  (FLOAT_IMPLICIT WS UNIT_TIME_MICRO)
+);
+SIZE: '-'? DIGITS (DOT DIGITS)? WS? [KMGTPEZY]? [bB];
+INT: '-'? DIGITS;
 QUOTED_STRING: QUOTE_DOUBLE (QUOTE_ESCAPED|SLASH_ESCAPED|.)*? QUOTE_DOUBLE;
 BOOLEAN: BOOLEAN_TRUE | BOOLEAN_FALSE;
 
@@ -128,6 +158,18 @@ fragment UNIT_TIME_YEAR: 'year' 's'?;
 
 fragment BOOLEAN_TRUE: 'true' | 't' | 'yes' | 'enable' | 'on';
 fragment BOOLEAN_FALSE: 'false' | 'f' | 'no' | 'disable' | 'off';
+
+fragment FLOAT_IMPLICIT: '-'? DIGITS (DOT DIGITS)?;
+
+fragment DURATION_TIME_ISO8601: 'T' (
+  (FLOAT_IMPLICIT 'H' FLOAT_IMPLICIT 'M' FLOAT_IMPLICIT 'S') |
+  (FLOAT_IMPLICIT 'H' FLOAT_IMPLICIT 'M') |
+  (FLOAT_IMPLICIT 'H' FLOAT_IMPLICIT 'S') |
+  (FLOAT_IMPLICIT 'M' FLOAT_IMPLICIT 'S') |
+  (FLOAT_IMPLICIT 'H') |
+  (FLOAT_IMPLICIT 'M') |
+  (FLOAT_IMPLICIT 'S')
+);
 
 /*
  * Identifier type.

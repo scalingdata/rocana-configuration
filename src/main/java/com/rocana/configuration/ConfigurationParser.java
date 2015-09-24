@@ -31,6 +31,9 @@ import org.antlr.v4.runtime.RecognitionException;
 import org.antlr.v4.runtime.Recognizer;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.apache.commons.lang3.StringEscapeUtils;
+import org.joda.time.MutablePeriod;
+import org.joda.time.format.PeriodFormatterBuilder;
+import org.joda.time.format.PeriodParser;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -39,6 +42,7 @@ import java.io.Reader;
 import java.lang.reflect.InvocationTargetException;
 import java.util.Deque;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.regex.Matcher;
@@ -100,6 +104,25 @@ public class ConfigurationParser {
     private static final Set<String> booleanTrueValues = Sets.newHashSet("true", "on", "enabled", "yes");
     private static final Pattern patternLong = Pattern.compile("^(\\d+)(?:\\s*[lL])?$");
     private static final Pattern patternFloat = Pattern.compile("^(\\d+(?:\\.\\d+)?)(?:\\s*[fF])?$");
+    private static final PeriodParser DURATION_PARSER_ISO8601 = new PeriodFormatterBuilder()
+      .appendLiteral("P")
+      .appendYears().appendSuffix("Y")
+      .appendMonths().appendSuffix("M")
+      .appendDays().appendSuffix("D")
+      .appendSeparatorIfFieldsAfter("T")
+      .appendHours().appendSuffix("H")
+      .appendMinutes().appendSuffix("M")
+      .appendSecondsWithOptionalMillis().appendSuffix("S")
+      .toParser();
+    private static final PeriodParser DURATION_PARSER_SIMPLE = new PeriodFormatterBuilder()
+      .appendYears().appendSuffix(" year", " years")
+      .appendMonths().appendSuffix(" month", " months")
+      .appendDays().appendSuffix(" day", " days")
+      .appendHours().appendSuffix(" hour", " hours")
+      .appendMinutes().appendSuffix(" minute", " minutes")
+      .appendSeconds().appendSuffix(" second", " seconds")
+      .appendMillis().appendSuffix(" milli", " millis")
+      .toParser();
 
     private Deque<TypeDescriptor> typeStack;
     private Deque<Object> valueStack;
@@ -160,7 +183,16 @@ public class ConfigurationParser {
 
     @Override
     public List<Object> visitValueDuration(com.rocana.configuration.antlr.ConfigurationParser.ValueDurationContext ctx) {
-      return Lists.<Object>newArrayList(ctx.DURATION().getText());
+      MutablePeriod period = new MutablePeriod();
+
+      if (ctx.DURATION_SIMPLE() != null && DURATION_PARSER_SIMPLE.parseInto(period, ctx.DURATION_SIMPLE().getText(), 0, Locale.US) > 0) {
+        return Lists.<Object>newArrayList(period.toPeriod());
+      } else if (ctx.DURATION_ISO8601() != null && DURATION_PARSER_ISO8601.parseInto(period, ctx.DURATION_ISO8601().getText(), 0, Locale.US) > 0) {
+        return Lists.<Object>newArrayList(period.toPeriod());
+      } else {
+        throw new ConfigurationException("Unable to parse duration value:'" + ctx.getText() + "' - Not in a known format");
+      }
+
     }
 
     @Override

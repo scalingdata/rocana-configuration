@@ -19,6 +19,7 @@ package com.rocana.configuration;
 import com.google.common.base.Objects;
 import com.rocana.configuration.annotations.ConfigurationFieldName;
 import com.rocana.configuration.annotations.ConfigurationProperty;
+import org.joda.time.Period;
 
 class FlatObject {
 
@@ -30,7 +31,7 @@ class FlatObject {
   private Long longValue;
   private Float floatValue;
   private String sizeValue;
-  private String durationValue;
+  private Period durationValue;
   private EmptyObject objectValue;
 
   public String getFieldName() {
@@ -96,12 +97,12 @@ class FlatObject {
     this.sizeValue = sizeValue;
   }
 
-  public String getDurationValue() {
+  public Period getDurationValue() {
     return durationValue;
   }
 
   @ConfigurationProperty(name = "duration-value")
-  public void setDurationValue(String durationValue) {
+  public void setDurationValue(Period durationValue) {
     this.durationValue = durationValue;
   }
 

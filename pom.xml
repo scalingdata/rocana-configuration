@@ -161,6 +161,12 @@
             </goals>
           </execution>
         </executions>
+        <configuration>
+          <excludes>
+            <exclude>.git/**</exclude>
+            <exclude>.repository/**</exclude> <!-- maven repo on jenkins -->
+          </excludes>
+        </configuration>
       </plugin>
     </plugins>
   </build>

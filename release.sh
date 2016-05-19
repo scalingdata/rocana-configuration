@@ -46,6 +46,7 @@ ${MVN} ${MVN_FLAGS} \
 
 # Deploy the release to the maven repo and tag the release in git
 ${MVN} ${MVN_FLAGS} \
+  -Prelease \
   deploy \
   scm:tag \
     -Dtag=release-${ROCANA_CONFIGURATION_RELEASE_VERSION} \
